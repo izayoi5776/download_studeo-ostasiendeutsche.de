@@ -5,6 +5,7 @@ import os
 from bs4 import BeautifulSoup
 from pathlib import Path
 import pickle
+import json
 
 # https://studeo-ostasiendeutsche.de/fotothek/china/nanjing/1937-2/1250-p6864
 # 保存 description 为 html 文件
@@ -54,6 +55,16 @@ def get1url(url):
     for i in soup.select('div[itemprop="description"]'):
       writeDesc(url, str(i))
 
+def printSize():
+  print("todo:" + str(len(urls)) + ", done:" + str(len(done)) + " skip:" + str(len(skip)))
+
+#https://stackoverflow.com/questions/22281059/set-object-is-not-json-serializable
+# convert set to list before save as json
+def set_default(obj):
+    if isinstance(obj, set):
+        return list(obj)
+    raise TypeError
+
 # INSTALL
 '''
 sudo apt-get update
@@ -71,24 +82,43 @@ urls = {"https://studeo-ostasiendeutsche.de/fotothek/china"}
 #urls = {"https://studeo-ostasiendeutsche.de/fotothek/china/nanjing/1937-2"}
 # 例：图和说明的页面
 #urls = {"https://studeo-ostasiendeutsche.de/fotothek/china/nanjing/1937-2/1250-p6864"}
+# 例：有错的
+#urls = {"https://studeo-ostasiendeutsche.de/fotothek/china/shanghai/1919-1/356-p0526"}
+
 done = set()
-settingFileName = "pickle.dump"
+skip = set()
+settingFileName = "setting.json"
 
 # read setting
 if(os.path.exists(settingFileName)):
-  with open(settingFileName, 'rb') as f:
-    urls, done = pickle.load(f)
-    print("restore data from last run, todo:" + str(len(urls)) + ", done:" + str(len(done)))
+  with open(settingFileName, 'r') as f:
+    js = json.load(f)
+    urls = set(js["urls"])
+    done = set(js["done"])
+    skip = set(js["skip"])
+    print("restore data from last run, ", end="")
+    printSize()
+
 while len(urls)>0:
   url = urls.pop()
   if url in done:
     print("skip " + url)
   else:
-    get1url(url)
-    done.add(url)
-    print("todo:" + str(len(urls)) + ", done:" + str(len(done)))
+    try:
+      get1url(url)
+      done.add(url)
+    except Exception as e:
+      print(" " + str(e) + " url=" + url)
+      skip.add(url)
+    finally:
+      printSize()
+
   # write setting
-  with open(settingFileName, 'wb') as f:
-    pickle.dump([urls, done], f)
+  with open(settingFileName, 'w') as f:
+    js = {}
+    js["urls"] = urls
+    js["done"] = done
+    js["skip"] = skip
+    json.dump(js, f, default=set_default)
 
 
