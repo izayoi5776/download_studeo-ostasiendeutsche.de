@@ -10,9 +10,9 @@ import pickle
 # 保存 description 为 html 文件
 def writeDesc(url, s):
   path = urllib.parse.urlparse(url).path
-  p2 = path.split("/")[-1]  # 1250-p6864
-  p3 = p2.split("-")[-1]    # p6864
-  fn = "file/" + p3 + ".html"
+  #p2 = path.split("/")[-1]  # 1250-p6864
+  #p3 = p2.split("-")[-1]    # p6864
+  fn = path[1:] + ".html"
   s = '<div class="description" url="' + url + '">' + str(s) + "</div>" 
   print(" desc=" + fn)
   with open(fn, "w", encoding="utf-8") as f:
@@ -22,9 +22,9 @@ def writeDesc(url, s):
 # 保存 url 对应图片, 用pxxxx作为文件名
 def getJpg(url):
   path = urllib.parse.urlparse(url).path
-  p2 = path.split("/")[-2]  # 1250-p6864
-  p3 = p2.split("-")[-1]    # p6864
-  fn = "file/" + p3 + ".jpg"
+  #p2 = path.split("/")[-2]  # 1250-p6864
+  #p3 = p2.split("-")[-1]    # p6864
+  fn = path[1:-5] + ".jpg"
   print(" fn=" + fn, end="")
   if(os.path.exists(fn)):
     print("...SKIP")
@@ -90,3 +90,5 @@ while len(urls)>0:
   # write setting
   with open(settingFileName, 'wb') as f:
     pickle.dump([urls, done], f)
+
+
